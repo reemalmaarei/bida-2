@@ -19,11 +19,43 @@ export default function ProfilePage() {
 
   const loadProfile = async () => {
     setIsLoading(true)
+    
+    // Check for demo mode first
+    const isDemoUser = localStorage.getItem('demoUser') === 'true'
+    if (isDemoUser) {
+      // Load demo data from localStorage
+      const demoChildren = JSON.parse(localStorage.getItem('demoChildren') || '[]')
+      setChildren(demoChildren)
+      setParent({
+        id: 'demo-user-123',
+        phone: 'Demo User',
+        created_at: new Date().toISOString(),
+        onboarded: true
+      } as Parent)
+      setIsLoading(false)
+      return
+    }
+    
     const supabase = createClient()
+    
+    if (!supabase) {
+      // No Supabase, use demo mode
+      const demoChildren = JSON.parse(localStorage.getItem('demoChildren') || '[]')
+      setChildren(demoChildren)
+      setParent({
+        id: 'demo-user-123',
+        phone: 'Demo User',
+        created_at: new Date().toISOString(),
+        onboarded: true
+      } as Parent)
+      setIsLoading(false)
+      return
+    }
     
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
-      router.push('/login')
+      // No user, redirect to add-child page
+      router.push('/add-child')
       return
     }
 
@@ -50,9 +82,19 @@ export default function ProfilePage() {
   }
 
   const handleSignOut = async () => {
+    // Clear demo data
+    localStorage.removeItem('demoUser')
+    localStorage.removeItem('userId')
+    localStorage.removeItem('demoChildren')
+    localStorage.removeItem('currentChild')
+    localStorage.removeItem('demoActivities')
+    
     const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/onboarding')
+    if (supabase) {
+      await supabase.auth.signOut()
+    }
+    
+    router.push('/add-child')
   }
 
   const getChildAge = (birthDate: string) => {
