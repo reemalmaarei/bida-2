@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --periwinkle: #B0C4E8;
+    --yellow: #F4C430;
+    --green: #B8D97E;
+    --orange: #F5A65B;
+    --pink: #E8B4C5;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html,
+  body {
+    @apply max-w-[430px] mx-auto;
+    height: 100%;
+    overflow-x: hidden;
+    background-color: #ffffff;
+  }
+
+  body {
+    @apply font-sans antialiased;
+  }
+}
+
+@layer components {
+  .touch-button {
+    @apply min-w-[60px] min-h-[60px] flex items-center justify-center rounded-xl font-medium transition-all duration-200 active:scale-95;
+  }
+
+  .bottom-action-area {
+    @apply fixed bottom-0 left-0 right-0 max-w-[430px] mx-auto p-4 bg-white border-t border-gray-100;
+  }
+
+  .celebration-particle {
+    @apply absolute pointer-events-none;
+    animation: particle-float 2s ease-out forwards;
+  }
+}
+
+@layer utilities {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .no-scroll {
+    overflow: hidden;
+    height: 100vh;
+  }
+}
+
+@keyframes particle-float {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-200px) rotate(360deg);
+    opacity: 0;
+  }
+}
