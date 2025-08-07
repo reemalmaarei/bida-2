@@ -232,7 +232,7 @@ function AssessmentContent() {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col justify-center p-8">
+      <div className="flex-1 flex flex-col p-6">
         <AnimatePresence mode="wait">
           {currentMilestoneData && (
             <motion.div
@@ -240,38 +240,88 @@ function AssessmentContent() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="text-center"
+              className="flex flex-col h-full"
             >
-              <h3 className="text-2xl font-bold mb-4">{currentMilestoneData.title}</h3>
-              {currentMilestoneData.description && (
-                <p className="text-gray-600 mb-8">{currentMilestoneData.description}</p>
-              )}
+              {/* Question Section */}
+              <div className="flex-1 flex flex-col justify-center text-center px-4">
+                <div className="mb-8">
+                  <h3 className="text-2xl font-bold mb-3">{currentMilestoneData.title}</h3>
+                  {currentMilestoneData.description && (
+                    <p className="text-gray-600 text-lg leading-relaxed">
+                      {currentMilestoneData.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Response Buttons - Large and Clickable */}
+              <div className="space-y-3 pb-safe">
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleResponse('yes')}
+                  className="w-full py-5 px-6 bg-green/20 border-2 border-green rounded-2xl flex items-center justify-between group hover:bg-green/30 transition-colors"
+                >
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-green/20 rounded-full flex items-center justify-center mr-4">
+                      <span className="text-2xl">✓</span>
+                    </div>
+                    <div className="text-left">
+                      <span className="text-lg font-semibold text-gray-900 block">Yes!</span>
+                      <span className="text-sm text-gray-600">My child can do this</span>
+                    </div>
+                  </div>
+                  <div className="text-green">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </motion.button>
+
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleResponse('try_it')}
+                  className="w-full py-5 px-6 bg-orange/20 border-2 border-orange rounded-2xl flex items-center justify-between group hover:bg-orange/30 transition-colors"
+                >
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-orange/20 rounded-full flex items-center justify-center mr-4">
+                      <span className="text-2xl">🤔</span>
+                    </div>
+                    <div className="text-left">
+                      <span className="text-lg font-semibold text-gray-900 block">Let me try</span>
+                      <span className="text-sm text-gray-600">Show me how to check</span>
+                    </div>
+                  </div>
+                  <div className="text-orange">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </motion.button>
+
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleResponse('not_yet')}
+                  className="w-full py-5 px-6 bg-gray-100 border-2 border-gray-300 rounded-2xl flex items-center justify-between group hover:bg-gray-200 transition-colors"
+                >
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mr-4">
+                      <span className="text-2xl">✗</span>
+                    </div>
+                    <div className="text-left">
+                      <span className="text-lg font-semibold text-gray-900 block">Not yet</span>
+                      <span className="text-sm text-gray-600">We'll work on this</span>
+                    </div>
+                  </div>
+                  <div className="text-gray-500">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </motion.button>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
-
-      <div className="bottom-action-area">
-        <div className="flex space-x-3">
-          <button
-            onClick={() => handleResponse('not_yet')}
-            className="flex-1 touch-button bg-gray-100 text-gray-700"
-          >
-            Not yet
-          </button>
-          <button
-            onClick={() => handleResponse('try_it')}
-            className="flex-1 touch-button bg-orange/20 text-orange-800"
-          >
-            Try it
-          </button>
-          <button
-            onClick={() => handleResponse('yes')}
-            className="flex-1 touch-button bg-green/20 text-green-800"
-          >
-            Yes!
-          </button>
-        </div>
       </div>
 
       {showTryItGuide && currentMilestoneData && (
