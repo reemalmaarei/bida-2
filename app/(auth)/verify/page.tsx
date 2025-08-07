@@ -158,6 +158,12 @@ export default function VerifyPage() {
     setIsLoading(true)
     const supabase = createClient()
     
+    if (!supabase) {
+      setError('Authentication service not available')
+      setIsLoading(false)
+      return
+    }
+    
     const { error } = await supabase.auth.signInWithOtp({
       phone,
     })
