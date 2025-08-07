@@ -6,7 +6,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/client'
-import { format } from 'date-fns'
+import { format, differenceInMonths } from 'date-fns'
+import { ASSESSMENT_MONTHS } from '@/lib/types'
 
 const childSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name is too long'),
@@ -57,7 +58,10 @@ export default function AddChildPage() {
         localStorage.setItem('demoChildren', JSON.stringify(existingChildren))
         localStorage.setItem('currentChild', JSON.stringify(childData))
         
-        router.push('/activities')
+        // Navigate to first milestone check
+        const ageInMonths = differenceInMonths(new Date(), new Date(data.birthDate))
+        const appropriateMonth = ASSESSMENT_MONTHS.find(month => month >= ageInMonths) || ASSESSMENT_MONTHS[0]
+        router.push(`/milestones/assess?child=${childData.id}&month=${appropriateMonth}&first=true`)
         return
       }
 
@@ -83,7 +87,10 @@ export default function AddChildPage() {
         localStorage.setItem('demoChildren', JSON.stringify(existingChildren))
         localStorage.setItem('currentChild', JSON.stringify(childData))
         
-        router.push('/activities')
+        // Navigate to first milestone check
+        const ageInMonths = differenceInMonths(new Date(), new Date(data.birthDate))
+        const appropriateMonth = ASSESSMENT_MONTHS.find(month => month >= ageInMonths) || ASSESSMENT_MONTHS[0]
+        router.push(`/milestones/assess?child=${childData.id}&month=${appropriateMonth}&first=true`)
         return
       }
       
@@ -107,7 +114,10 @@ export default function AddChildPage() {
         localStorage.setItem('demoChildren', JSON.stringify([childData]))
         localStorage.setItem('currentChild', JSON.stringify(childData))
         
-        router.push('/activities')
+        // Navigate to first milestone check
+        const ageInMonths = differenceInMonths(new Date(), new Date(data.birthDate))
+        const appropriateMonth = ASSESSMENT_MONTHS.find(month => month >= ageInMonths) || ASSESSMENT_MONTHS[0]
+        router.push(`/milestones/assess?child=${childData.id}&month=${appropriateMonth}&first=true`)
         return
       }
 
@@ -128,7 +138,7 @@ export default function AddChildPage() {
         return
       }
 
-      const { error: childError } = await supabase
+      const { error: childError, data: childData } = await supabase
         .from('children')
         .insert({
           parent_id: user.id,
@@ -136,11 +146,16 @@ export default function AddChildPage() {
           birth_date: data.birthDate,
           avatar_url: selectedAvatar
         })
+        .select()
+        .single()
 
       if (childError) {
         setError(childError.message)
-      } else {
-        router.push('/activities')
+      } else if (childData) {
+        // Navigate to first milestone check
+        const ageInMonths = differenceInMonths(new Date(), new Date(data.birthDate))
+        const appropriateMonth = ASSESSMENT_MONTHS.find(month => month >= ageInMonths) || ASSESSMENT_MONTHS[0]
+        router.push(`/milestones/assess?child=${childData.id}&month=${appropriateMonth}&first=true`)
       }
     } catch (err) {
       setError('An unexpected error occurred')

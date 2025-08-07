@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Milestone, MilestoneResponse, DevelopmentalDomain } from '@/lib/types'
 import { DOMAINS, DOMAIN_LABELS, DOMAIN_COLORS } from '@/lib/types'
+import { getDemoMilestones } from '@/lib/demo-milestones'
 import TryItGuide from '@/components/features/TryItGuide'
 import CelebrationAnimation from '@/components/ui/CelebrationAnimation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -14,6 +15,7 @@ function AssessmentContent() {
   const searchParams = useSearchParams()
   const childId = searchParams.get('child')
   const assessmentMonth = parseInt(searchParams.get('month') || '0')
+  const isFirstAssessment = searchParams.get('first') === 'true'
 
   const [milestones, setMilestones] = useState<Milestone[]>([])
   const [currentDomainIndex, setCurrentDomainIndex] = useState(0)
@@ -35,7 +37,11 @@ function AssessmentContent() {
     
     if (!supabase) {
       // No Supabase configured, use demo milestones
-      setMilestones([])
+      const demoMilestones = getDemoMilestones(assessmentMonth)
+      setMilestones(demoMilestones)
+      if (demoMilestones.length > 0) {
+        setCurrentMilestone(demoMilestones[0])
+      }
       setIsLoading(false)
       return
     }
@@ -111,6 +117,10 @@ function AssessmentContent() {
     await generateActivities(allResponses)
 
     setTimeout(() => {
+      if (isFirstAssessment) {
+        // Store that onboarding is complete
+        localStorage.setItem('onboardingComplete', 'true')
+      }
       router.push('/activities')
     }, 3000)
   }
@@ -175,6 +185,16 @@ function AssessmentContent() {
   return (
     <div className="flex flex-col h-screen">
       <div className="bg-white border-b border-gray-200 p-4">
+        {isFirstAssessment && currentMilestoneIndex === 0 && (
+          <div className="bg-periwinkle/10 rounded-xl p-3 mb-4">
+            <p className="text-sm text-periwinkle font-medium">
+              Welcome! Let's do a quick check to see where your child is at.
+            </p>
+            <p className="text-xs text-gray-600 mt-1">
+              This helps us create personalized activities just for them.
+            </p>
+          </div>
+        )}
         <div className="mb-4">
           <div className="flex justify-between items-center mb-2">
             <h2 className="text-lg font-semibold">{assessmentMonth} Month Assessment</h2>

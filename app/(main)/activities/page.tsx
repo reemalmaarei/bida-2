@@ -12,8 +12,17 @@ export default function ActivitiesPage() {
   const [selectedChild, setSelectedChild] = useState<Child | null>(null)
   const [filter, setFilter] = useState<'active' | 'completed' | 'saved'>('active')
   const [isLoading, setIsLoading] = useState(true)
+  const [showWelcome, setShowWelcome] = useState(false)
 
   useEffect(() => {
+    // Check if user just completed onboarding
+    const onboardingComplete = localStorage.getItem('onboardingComplete')
+    if (onboardingComplete === 'true') {
+      setShowWelcome(true)
+      localStorage.removeItem('onboardingComplete')
+      // Hide welcome after 5 seconds
+      setTimeout(() => setShowWelcome(false), 5000)
+    }
     loadData()
   }, [])
 
@@ -227,6 +236,14 @@ export default function ActivitiesPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="p-4">
+          {showWelcome && (
+            <div className="bg-green/10 border border-green rounded-xl p-3 mb-4">
+              <p className="text-sm font-medium text-green">🎉 Welcome to Bida!</p>
+              <p className="text-xs text-gray-600 mt-1">
+                Here are personalized activities based on your child's assessment. Try one to get started!
+              </p>
+            </div>
+          )}
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-bold">Activities</h1>
