@@ -23,8 +23,8 @@ const phoneSchema = z.object({
 
 type PhoneFormData = z.infer<typeof phoneSchema>
 
-// Development mode flag - set to true to bypass SMS
-const DEV_MODE = process.env.NODE_ENV === 'development'
+// Test mode flag - can be enabled in production via environment variable
+const TEST_MODE = process.env.NEXT_PUBLIC_TEST_MODE === 'true' || process.env.NODE_ENV === 'development'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -42,9 +42,9 @@ export default function LoginPage() {
     try {
       console.log('Phone authentication attempt:', data.phone)
       
-      // Development mode bypass
-      if (DEV_MODE && data.phone === '+11234567890') {
-        console.log('DEV MODE: Bypassing SMS verification')
+      // Test mode bypass
+      if (TEST_MODE && data.phone === '+11234567890') {
+        console.log('TEST MODE: Bypassing SMS verification')
         localStorage.setItem('phoneNumber', data.phone)
         localStorage.setItem('devMode', 'true')
         router.push('/verify')
@@ -108,10 +108,10 @@ export default function LoginPage() {
             </div>
           )}
 
-          {DEV_MODE && (
+          {TEST_MODE && (
             <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-xs text-blue-600">
-                Dev Mode: Use 1234567890 as phone number and 123456 as OTP code
+                Test Mode: Use 1234567890 as phone number and 123456 as OTP code
               </p>
               <p className="text-xs text-blue-500 mt-1">
                 Note: Anonymous auth must be enabled in Supabase dashboard

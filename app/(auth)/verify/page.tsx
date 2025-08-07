@@ -53,9 +53,9 @@ export default function VerifyPage() {
         return
       }
 
-      // Development mode bypass with anonymous sign-in
+      // Test mode bypass with anonymous sign-in
       if (isDevMode && otpCode === '123456') {
-        console.log('DEV MODE: Using anonymous sign-in')
+        console.log('TEST MODE: Using anonymous sign-in')
         localStorage.removeItem('devMode')
         
         // Sign in anonymously to create a real session
@@ -63,7 +63,7 @@ export default function VerifyPage() {
         
         if (error) {
           console.error('Anonymous sign-in error:', error)
-          setError('Dev mode sign-in failed. Make sure anonymous auth is enabled in Supabase.')
+          setError('Test mode sign-in failed. Make sure anonymous auth is enabled in Supabase.')
           setCode(['', '', '', '', '', ''])
           inputRefs.current[0]?.focus()
         } else if (data.user) {
