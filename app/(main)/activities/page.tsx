@@ -38,7 +38,7 @@ export default function ActivitiesPage() {
         
         // Generate demo activities
         const demoActivities = generateDemoActivities(currentChild?.id || demoChildren[0].id)
-        setActivities(demoActivities.filter(a => a.state === filter))
+        setActivities(demoActivities.filter((a: any) => a.state === filter))
       }
       setIsLoading(false)
       return
@@ -55,7 +55,7 @@ export default function ActivitiesPage() {
           setChildren(demoChildren)
           setSelectedChild(demoChildren[0])
           const demoActivities = generateDemoActivities(demoChildren[0].id)
-          setActivities(demoActivities.filter(a => a.state === filter))
+          setActivities(demoActivities.filter((a: any) => a.state === filter))
         }
         setIsLoading(false)
         return
@@ -70,7 +70,7 @@ export default function ActivitiesPage() {
           setChildren(demoChildren)
           setSelectedChild(demoChildren[0])
           const demoActivities = generateDemoActivities(demoChildren[0].id)
-          setActivities(demoActivities.filter(a => a.state === filter))
+          setActivities(demoActivities.filter((a: any) => a.state === filter))
         }
         setIsLoading(false)
         return
@@ -94,7 +94,7 @@ export default function ActivitiesPage() {
         setChildren(demoChildren)
         setSelectedChild(demoChildren[0])
         const demoActivities = generateDemoActivities(demoChildren[0].id)
-        setActivities(demoActivities.filter(a => a.state === filter))
+        setActivities(demoActivities.filter((a: any) => a.state === filter))
       }
     }
     setIsLoading(false)
@@ -127,7 +127,7 @@ export default function ActivitiesPage() {
     const isDemoUser = localStorage.getItem('demoUser') === 'true'
     if (isDemoUser) {
       const demoActivities = generateDemoActivities(childId)
-      setActivities(demoActivities.filter(a => a.state === filter))
+      setActivities(demoActivities.filter((a: any) => a.state === filter))
       setIsLoading(false)
       return
     }
@@ -137,7 +137,7 @@ export default function ActivitiesPage() {
     if (!supabase) {
       // Supabase not configured, use demo activities
       const demoActivities = generateDemoActivities(childId)
-      setActivities(demoActivities.filter(a => a.state === filter))
+      setActivities(demoActivities.filter((a: any) => a.state === filter))
       setIsLoading(false)
       return
     }

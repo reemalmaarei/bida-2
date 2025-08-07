@@ -17,6 +17,13 @@ export default function ExpertsPage() {
     setIsLoading(true)
     const supabase = createClient()
     
+    if (!supabase) {
+      // No Supabase configured, show empty state
+      setExperts([])
+      setIsLoading(false)
+      return
+    }
+    
     const { data } = await supabase
       .from('experts')
       .select('*')

@@ -18,6 +18,13 @@ export default function ResourcesPage() {
     setIsLoading(true)
     const supabase = createClient()
     
+    if (!supabase) {
+      // No Supabase configured, show empty state
+      setResources([])
+      setIsLoading(false)
+      return
+    }
+    
     let query = supabase.from('resources').select('*')
     
     if (selectedCategory) {

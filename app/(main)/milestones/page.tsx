@@ -26,7 +26,30 @@ export default function MilestonesPage() {
   }, [selectedChild])
 
   const loadData = async () => {
+    // Check for demo mode first
+    const isDemoUser = localStorage.getItem('demoUser') === 'true'
+    if (isDemoUser) {
+      const demoChildren = JSON.parse(localStorage.getItem('demoChildren') || '[]')
+      if (demoChildren.length > 0) {
+        setChildren(demoChildren)
+        setSelectedChild(demoChildren[0])
+      }
+      setIsLoading(false)
+      return
+    }
+    
     const supabase = createClient()
+    
+    if (!supabase) {
+      // No Supabase configured, use demo mode
+      const demoChildren = JSON.parse(localStorage.getItem('demoChildren') || '[]')
+      if (demoChildren.length > 0) {
+        setChildren(demoChildren)
+        setSelectedChild(demoChildren[0])
+      }
+      setIsLoading(false)
+      return
+    }
     
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
@@ -45,7 +68,21 @@ export default function MilestonesPage() {
   }
 
   const loadCompletedAssessments = async (childId: string) => {
+    // Check for demo mode
+    const isDemoUser = localStorage.getItem('demoUser') === 'true'
+    if (isDemoUser) {
+      // In demo mode, no completed assessments yet
+      setCompletedAssessments([])
+      return
+    }
+    
     const supabase = createClient()
+    
+    if (!supabase) {
+      // No Supabase configured
+      setCompletedAssessments([])
+      return
+    }
     
     const { data } = await supabase
       .from('milestone_assessments')

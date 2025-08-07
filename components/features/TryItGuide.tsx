@@ -23,6 +23,12 @@ export default function TryItGuide({ milestone, onClose, onComplete }: TryItGuid
   const loadGuide = async () => {
     const supabase = createClient()
     
+    if (!supabase) {
+      // No Supabase configured, no guide available
+      setIsLoading(false)
+      return
+    }
+    
     const { data } = await supabase
       .from('try_it_guides')
       .select('*')

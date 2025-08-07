@@ -33,6 +33,13 @@ function AssessmentContent() {
   const loadMilestones = async () => {
     const supabase = createClient()
     
+    if (!supabase) {
+      // No Supabase configured, use demo milestones
+      setMilestones([])
+      setIsLoading(false)
+      return
+    }
+    
     const { data } = await supabase
       .from('milestones')
       .select('*')
@@ -95,9 +102,11 @@ function AssessmentContent() {
       response: response
     }))
 
-    await supabase
-      .from('milestone_assessments')
-      .insert(assessmentData)
+    if (supabase) {
+      await supabase
+        .from('milestone_assessments')
+        .insert(assessmentData)
+    }
 
     await generateActivities(allResponses)
 
@@ -143,7 +152,12 @@ function AssessmentContent() {
       }
     }
 
-    await supabase.from('activities').insert(activities)
+    if (supabase) {
+      await supabase.from('activities').insert(activities)
+    } else {
+      // Save to localStorage in demo mode
+      localStorage.setItem('demoActivities', JSON.stringify(activities))
+    }
   }
 
   if (isLoading) {
