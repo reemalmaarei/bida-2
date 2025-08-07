@@ -47,6 +47,20 @@ export default function ActivitiesPage() {
     // Try Supabase
     try {
       const supabase = createClient()
+      
+      if (!supabase) {
+        // Supabase not configured, use demo mode
+        const demoChildren = JSON.parse(localStorage.getItem('demoChildren') || '[]')
+        if (demoChildren.length > 0) {
+          setChildren(demoChildren)
+          setSelectedChild(demoChildren[0])
+          const demoActivities = generateDemoActivities(demoChildren[0].id)
+          setActivities(demoActivities.filter(a => a.state === filter))
+        }
+        setIsLoading(false)
+        return
+      }
+      
       const { data: { user } } = await supabase.auth.getUser()
       
       if (!user) {
@@ -108,7 +122,25 @@ export default function ActivitiesPage() {
 
   const loadActivities = async (childId: string) => {
     setIsLoading(true)
+    
+    // Check for demo mode or if Supabase is not configured
+    const isDemoUser = localStorage.getItem('demoUser') === 'true'
+    if (isDemoUser) {
+      const demoActivities = generateDemoActivities(childId)
+      setActivities(demoActivities.filter(a => a.state === filter))
+      setIsLoading(false)
+      return
+    }
+    
     const supabase = createClient()
+    
+    if (!supabase) {
+      // Supabase not configured, use demo activities
+      const demoActivities = generateDemoActivities(childId)
+      setActivities(demoActivities.filter(a => a.state === filter))
+      setIsLoading(false)
+      return
+    }
     
     const { data } = await supabase
       .from('activities')
@@ -125,7 +157,43 @@ export default function ActivitiesPage() {
   }
 
   const handleActivityStateChange = async (activityId: string, newState: 'active' | 'completed' | 'saved') => {
+    // Check for demo mode
+    const isDemoUser = localStorage.getItem('demoUser') === 'true'
+    if (isDemoUser) {
+      // Update demo activities in localStorage
+      const demoActivities = JSON.parse(localStorage.getItem('demoActivities') || '[]')
+      const updatedActivities = demoActivities.map((a: any) => {
+        if (a.id === activityId) {
+          return { ...a, state: newState }
+        }
+        return a
+      })
+      localStorage.setItem('demoActivities', JSON.stringify(updatedActivities))
+      
+      if (selectedChild) {
+        loadActivities(selectedChild.id)
+      }
+      return
+    }
+    
     const supabase = createClient()
+    
+    if (!supabase) {
+      // Supabase not configured, update demo activities
+      const demoActivities = JSON.parse(localStorage.getItem('demoActivities') || '[]')
+      const updatedActivities = demoActivities.map((a: any) => {
+        if (a.id === activityId) {
+          return { ...a, state: newState }
+        }
+        return a
+      })
+      localStorage.setItem('demoActivities', JSON.stringify(updatedActivities))
+      
+      if (selectedChild) {
+        loadActivities(selectedChild.id)
+      }
+      return
+    }
     
     const updateData: any = { state: newState }
     if (newState === 'completed') {

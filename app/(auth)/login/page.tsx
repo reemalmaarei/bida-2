@@ -53,27 +53,10 @@ export default function LoginPage() {
       }
 
       // Try to use Supabase if available
-      try {
-        const supabase = createClient()
-        
-        const { error } = await supabase.auth.signInWithOtp({
-          phone: data.phone,
-          options: {
-            channel: 'sms',
-          }
-        })
-
-        if (error) {
-          console.error('Supabase auth error:', error)
-          setError(error.message)
-        } else {
-          console.log('OTP sent successfully')
-          localStorage.setItem('phoneNumber', data.phone)
-          router.push('/verify')
-        }
-      } catch (supabaseError) {
-        console.error('Supabase not configured:', supabaseError)
-        // In test mode, allow demo access
+      const supabase = createClient()
+      
+      if (!supabase) {
+        // Supabase not configured - use demo mode if test mode is enabled
         if (TEST_MODE) {
           console.log('Supabase not configured - using demo mode')
           localStorage.setItem('phoneNumber', data.phone)
@@ -83,6 +66,24 @@ export default function LoginPage() {
         } else {
           setError('Authentication service not configured. Please contact support.')
         }
+        return
+      }
+
+      // Supabase is configured, try to send OTP
+      const { error } = await supabase.auth.signInWithOtp({
+        phone: data.phone,
+        options: {
+          channel: 'sms',
+        }
+      })
+
+      if (error) {
+        console.error('Supabase auth error:', error)
+        setError(error.message)
+      } else {
+        console.log('OTP sent successfully')
+        localStorage.setItem('phoneNumber', data.phone)
+        router.push('/verify')
       }
     } catch (err) {
       console.error('Unexpected error:', err)

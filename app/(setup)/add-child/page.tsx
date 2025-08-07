@@ -62,65 +62,37 @@ export default function AddChildPage() {
       }
 
       // Try to use Supabase if not in demo mode
-      try {
-        const supabase = createClient()
-        const { data: { user } } = await supabase.auth.getUser()
+      const supabase = createClient()
+      
+      if (!supabase) {
+        // Supabase not configured, use demo mode
+        console.log('Supabase not configured, using demo mode')
+        const childData = {
+          id: `child-${Date.now()}`,
+          parent_id: 'demo-user-123',
+          name: data.name,
+          birth_date: data.birthDate,
+          avatar_url: selectedAvatar,
+          created_at: new Date().toISOString()
+        }
         
-        if (!user) {
-          // Fall back to demo mode
-          console.log('No user found, using demo mode')
-          const childData = {
-            id: `child-${Date.now()}`,
-            parent_id: 'demo-user-123',
-            name: data.name,
-            birth_date: data.birthDate,
-            avatar_url: selectedAvatar,
-            created_at: new Date().toISOString()
-          }
-          
-          localStorage.setItem('demoUser', 'true')
-          localStorage.setItem('userId', 'demo-user-123')
-          localStorage.setItem('demoChildren', JSON.stringify([childData]))
-          localStorage.setItem('currentChild', JSON.stringify(childData))
-          
-          router.push('/activities')
-          return
-        }
-
-        // For anonymous users, use a placeholder phone number
-        const phoneNumber = user.phone || `anonymous_${user.id.slice(0, 8)}`
+        localStorage.setItem('demoUser', 'true')
+        localStorage.setItem('userId', 'demo-user-123')
+        const existingChildren = JSON.parse(localStorage.getItem('demoChildren') || '[]')
+        existingChildren.push(childData)
+        localStorage.setItem('demoChildren', JSON.stringify(existingChildren))
+        localStorage.setItem('currentChild', JSON.stringify(childData))
         
-        const { error: parentError } = await supabase
-          .from('parents')
-          .upsert({
-            id: user.id,
-            phone: phoneNumber,
-            onboarded: true,
-            terms_accepted_at: new Date().toISOString()
-          })
-
-        if (parentError) {
-          setError(parentError.message)
-          return
-        }
-
-        const { error: childError } = await supabase
-          .from('children')
-          .insert({
-            parent_id: user.id,
-            name: data.name,
-            birth_date: data.birthDate,
-            avatar_url: selectedAvatar
-          })
-
-        if (childError) {
-          setError(childError.message)
-        } else {
-          router.push('/activities')
-        }
-      } catch (supabaseErr) {
-        console.error('Supabase error, falling back to demo mode:', supabaseErr)
-        // Fall back to demo mode
+        router.push('/activities')
+        return
+      }
+      
+      // Supabase is configured, try to get user
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        // No user session, fall back to demo mode
+        console.log('No user found, using demo mode')
         const childData = {
           id: `child-${Date.now()}`,
           parent_id: 'demo-user-123',
@@ -135,6 +107,39 @@ export default function AddChildPage() {
         localStorage.setItem('demoChildren', JSON.stringify([childData]))
         localStorage.setItem('currentChild', JSON.stringify(childData))
         
+        router.push('/activities')
+        return
+      }
+
+      // For anonymous users, use a placeholder phone number
+      const phoneNumber = user.phone || `anonymous_${user.id.slice(0, 8)}`
+      
+      const { error: parentError } = await supabase
+        .from('parents')
+        .upsert({
+          id: user.id,
+          phone: phoneNumber,
+          onboarded: true,
+          terms_accepted_at: new Date().toISOString()
+        })
+
+      if (parentError) {
+        setError(parentError.message)
+        return
+      }
+
+      const { error: childError } = await supabase
+        .from('children')
+        .insert({
+          parent_id: user.id,
+          name: data.name,
+          birth_date: data.birthDate,
+          avatar_url: selectedAvatar
+        })
+
+      if (childError) {
+        setError(childError.message)
+      } else {
         router.push('/activities')
       }
     } catch (err) {

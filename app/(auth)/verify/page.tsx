@@ -65,43 +65,54 @@ export default function VerifyPage() {
 
       // Test mode bypass with anonymous sign-in (requires Supabase)
       if (isDevMode && otpCode === '123456') {
-        console.log('TEST MODE: Using anonymous sign-in')
+        console.log('TEST MODE: Checking Supabase availability')
         localStorage.removeItem('devMode')
         
-        try {
-          const supabase = createClient()
-          // Sign in anonymously to create a real session
-          const { data, error } = await supabase.auth.signInAnonymously()
-          
-          if (error) {
-            console.error('Anonymous sign-in error:', error)
-            // Fall back to demo mode
-            localStorage.setItem('demoUser', 'true')
-            localStorage.setItem('userId', 'demo-user-123')
-            router.push('/add-child')
-            return
-          } else if (data.user) {
-            console.log('Anonymous sign-in successful, user ID:', data.user.id)
-            
-            // Check if this anonymous user already has children
-            const { data: parentData } = await supabase
-              .from('parents')
-              .select('*, children(*)')
-              .eq('id', data.user.id)
-              .single()
-
-            if (parentData?.children && parentData.children.length > 0) {
-              router.push('/activities')
-            } else {
-              router.push('/add-child')
-            }
-          }
-        } catch (error) {
+        const supabase = createClient()
+        
+        if (!supabase) {
+          // Supabase not configured, use demo mode
           console.log('Supabase not available, using demo mode')
           localStorage.setItem('demoUser', 'true')
           localStorage.setItem('userId', 'demo-user-123')
           router.push('/add-child')
+          return
         }
+        
+        // Try anonymous sign-in
+        const { data, error } = await supabase.auth.signInAnonymously()
+        
+        if (error) {
+          console.error('Anonymous sign-in error:', error)
+          // Fall back to demo mode
+          localStorage.setItem('demoUser', 'true')
+          localStorage.setItem('userId', 'demo-user-123')
+          router.push('/add-child')
+          return
+        } else if (data.user) {
+          console.log('Anonymous sign-in successful, user ID:', data.user.id)
+          
+          // Check if this anonymous user already has children
+          const { data: parentData } = await supabase
+            .from('parents')
+            .select('*, children(*)')
+            .eq('id', data.user.id)
+            .single()
+
+          if (parentData?.children && parentData.children.length > 0) {
+            router.push('/activities')
+          } else {
+            router.push('/add-child')
+          }
+        }
+        return
+      }
+      
+      // Regular OTP verification (requires Supabase)
+      const supabase = createClient()
+      
+      if (!supabase) {
+        setError('Authentication service not available')
         return
       }
       
