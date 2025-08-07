@@ -42,31 +42,47 @@ export default function LoginPage() {
     try {
       console.log('Phone authentication attempt:', data.phone)
       
-      // Test mode bypass
+      // Test mode bypass - works without Supabase
       if (TEST_MODE && data.phone === '+11234567890') {
         console.log('TEST MODE: Bypassing SMS verification')
         localStorage.setItem('phoneNumber', data.phone)
         localStorage.setItem('devMode', 'true')
+        localStorage.setItem('demoMode', 'true')
         router.push('/verify')
         return
       }
 
-      const supabase = createClient()
-      
-      const { error } = await supabase.auth.signInWithOtp({
-        phone: data.phone,
-        options: {
-          channel: 'sms',
-        }
-      })
+      // Try to use Supabase if available
+      try {
+        const supabase = createClient()
+        
+        const { error } = await supabase.auth.signInWithOtp({
+          phone: data.phone,
+          options: {
+            channel: 'sms',
+          }
+        })
 
-      if (error) {
-        console.error('Supabase auth error:', error)
-        setError(error.message)
-      } else {
-        console.log('OTP sent successfully')
-        localStorage.setItem('phoneNumber', data.phone)
-        router.push('/verify')
+        if (error) {
+          console.error('Supabase auth error:', error)
+          setError(error.message)
+        } else {
+          console.log('OTP sent successfully')
+          localStorage.setItem('phoneNumber', data.phone)
+          router.push('/verify')
+        }
+      } catch (supabaseError) {
+        console.error('Supabase not configured:', supabaseError)
+        // In test mode, allow demo access
+        if (TEST_MODE) {
+          console.log('Supabase not configured - using demo mode')
+          localStorage.setItem('phoneNumber', data.phone)
+          localStorage.setItem('devMode', 'true')
+          localStorage.setItem('demoMode', 'true')
+          router.push('/verify')
+        } else {
+          setError('Authentication service not configured. Please contact support.')
+        }
       }
     } catch (err) {
       console.error('Unexpected error:', err)

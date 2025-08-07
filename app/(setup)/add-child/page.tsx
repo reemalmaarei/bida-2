@@ -35,44 +35,106 @@ export default function AddChildPage() {
     setError(null)
 
     try {
-      const supabase = createClient()
+      // Check if we're in demo mode
+      const isDemoUser = localStorage.getItem('demoUser') === 'true'
+      const demoUserId = localStorage.getItem('userId')
       
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (!user) {
-        router.push('/login')
-        return
-      }
-
-      // For anonymous users, use a placeholder phone number
-      const phoneNumber = user.phone || `anonymous_${user.id.slice(0, 8)}`
-      
-      const { error: parentError } = await supabase
-        .from('parents')
-        .upsert({
-          id: user.id,
-          phone: phoneNumber,
-          onboarded: true,
-          terms_accepted_at: new Date().toISOString()
-        })
-
-      if (parentError) {
-        setError(parentError.message)
-        return
-      }
-
-      const { error: childError } = await supabase
-        .from('children')
-        .insert({
-          parent_id: user.id,
+      if (isDemoUser) {
+        // Demo mode - just save to localStorage
+        console.log('Demo mode: Saving child data locally')
+        const childData = {
+          id: `child-${Date.now()}`,
+          parent_id: demoUserId,
           name: data.name,
           birth_date: data.birthDate,
-          avatar_url: selectedAvatar
-        })
+          avatar_url: selectedAvatar,
+          created_at: new Date().toISOString()
+        }
+        
+        // Save child data to localStorage
+        const existingChildren = JSON.parse(localStorage.getItem('demoChildren') || '[]')
+        existingChildren.push(childData)
+        localStorage.setItem('demoChildren', JSON.stringify(existingChildren))
+        localStorage.setItem('currentChild', JSON.stringify(childData))
+        
+        router.push('/activities')
+        return
+      }
 
-      if (childError) {
-        setError(childError.message)
-      } else {
+      // Try to use Supabase if not in demo mode
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        if (!user) {
+          // Fall back to demo mode
+          console.log('No user found, using demo mode')
+          const childData = {
+            id: `child-${Date.now()}`,
+            parent_id: 'demo-user-123',
+            name: data.name,
+            birth_date: data.birthDate,
+            avatar_url: selectedAvatar,
+            created_at: new Date().toISOString()
+          }
+          
+          localStorage.setItem('demoUser', 'true')
+          localStorage.setItem('userId', 'demo-user-123')
+          localStorage.setItem('demoChildren', JSON.stringify([childData]))
+          localStorage.setItem('currentChild', JSON.stringify(childData))
+          
+          router.push('/activities')
+          return
+        }
+
+        // For anonymous users, use a placeholder phone number
+        const phoneNumber = user.phone || `anonymous_${user.id.slice(0, 8)}`
+        
+        const { error: parentError } = await supabase
+          .from('parents')
+          .upsert({
+            id: user.id,
+            phone: phoneNumber,
+            onboarded: true,
+            terms_accepted_at: new Date().toISOString()
+          })
+
+        if (parentError) {
+          setError(parentError.message)
+          return
+        }
+
+        const { error: childError } = await supabase
+          .from('children')
+          .insert({
+            parent_id: user.id,
+            name: data.name,
+            birth_date: data.birthDate,
+            avatar_url: selectedAvatar
+          })
+
+        if (childError) {
+          setError(childError.message)
+        } else {
+          router.push('/activities')
+        }
+      } catch (supabaseErr) {
+        console.error('Supabase error, falling back to demo mode:', supabaseErr)
+        // Fall back to demo mode
+        const childData = {
+          id: `child-${Date.now()}`,
+          parent_id: 'demo-user-123',
+          name: data.name,
+          birth_date: data.birthDate,
+          avatar_url: selectedAvatar,
+          created_at: new Date().toISOString()
+        }
+        
+        localStorage.setItem('demoUser', 'true')
+        localStorage.setItem('userId', 'demo-user-123')
+        localStorage.setItem('demoChildren', JSON.stringify([childData]))
+        localStorage.setItem('currentChild', JSON.stringify(childData))
+        
         router.push('/activities')
       }
     } catch (err) {

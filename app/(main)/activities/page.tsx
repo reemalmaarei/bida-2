@@ -24,21 +24,86 @@ export default function ActivitiesPage() {
   }, [selectedChild, filter])
 
   const loadData = async () => {
-    const supabase = createClient()
+    // Check for demo mode first
+    const isDemoUser = localStorage.getItem('demoUser') === 'true'
     
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
-    const { data: childrenData } = await supabase
-      .from('children')
-      .select('*')
-      .eq('parent_id', user.id)
-      .order('created_at', { ascending: true })
-
-    if (childrenData && childrenData.length > 0) {
-      setChildren(childrenData)
-      setSelectedChild(childrenData[0])
+    if (isDemoUser) {
+      // Load demo data from localStorage
+      const demoChildren = JSON.parse(localStorage.getItem('demoChildren') || '[]')
+      const currentChild = JSON.parse(localStorage.getItem('currentChild') || 'null')
+      
+      if (demoChildren.length > 0) {
+        setChildren(demoChildren)
+        setSelectedChild(currentChild || demoChildren[0])
+        
+        // Generate demo activities
+        const demoActivities = generateDemoActivities(currentChild?.id || demoChildren[0].id)
+        setActivities(demoActivities.filter(a => a.state === filter))
+      }
+      setIsLoading(false)
+      return
     }
+
+    // Try Supabase
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        // Fall back to demo mode
+        const demoChildren = JSON.parse(localStorage.getItem('demoChildren') || '[]')
+        if (demoChildren.length > 0) {
+          setChildren(demoChildren)
+          setSelectedChild(demoChildren[0])
+          const demoActivities = generateDemoActivities(demoChildren[0].id)
+          setActivities(demoActivities.filter(a => a.state === filter))
+        }
+        setIsLoading(false)
+        return
+      }
+
+      const { data: childrenData } = await supabase
+        .from('children')
+        .select('*')
+        .eq('parent_id', user.id)
+        .order('created_at', { ascending: true })
+
+      if (childrenData && childrenData.length > 0) {
+        setChildren(childrenData)
+        setSelectedChild(childrenData[0])
+      }
+    } catch (error) {
+      console.error('Error loading data:', error)
+      // Fall back to demo mode
+      const demoChildren = JSON.parse(localStorage.getItem('demoChildren') || '[]')
+      if (demoChildren.length > 0) {
+        setChildren(demoChildren)
+        setSelectedChild(demoChildren[0])
+        const demoActivities = generateDemoActivities(demoChildren[0].id)
+        setActivities(demoActivities.filter(a => a.state === filter))
+      }
+    }
+    setIsLoading(false)
+  }
+
+  // Generate demo activities
+  const generateDemoActivities = (childId: string) => {
+    const demoActivities = JSON.parse(localStorage.getItem('demoActivities') || '[]')
+    
+    if (demoActivities.length === 0) {
+      // Create sample activities
+      const activities = [
+        { id: '1', child_id: childId, title: 'Tummy Time Fun', description: 'Place baby on tummy for 5 minutes', domain: 'gross_motor', state: 'active' },
+        { id: '2', child_id: childId, title: 'Sing a Song', description: 'Sing nursery rhymes with actions', domain: 'communication', state: 'active' },
+        { id: '3', child_id: childId, title: 'Finger Play', description: 'Help baby grasp small toys', domain: 'fine_motor', state: 'active' },
+        { id: '4', child_id: childId, title: 'Peek-a-Boo', description: 'Play peek-a-boo to develop social skills', domain: 'personal_social', state: 'active' },
+        { id: '5', child_id: childId, title: 'Stack Blocks', description: 'Stack 3 blocks together', domain: 'problem_solving', state: 'active' },
+      ]
+      localStorage.setItem('demoActivities', JSON.stringify(activities))
+      return activities
+    }
+    
+    return demoActivities
   }
 
   const loadActivities = async (childId: string) => {
